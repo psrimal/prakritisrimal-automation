@@ -1,6 +1,9 @@
 title:
   en_us: Copy Units
 layout:
+  - Unit Typology Parameter
+  - Move Groups
   - Write Data
   - Copy Units
-  - Move Groups
+  - Mirror Units
+  
