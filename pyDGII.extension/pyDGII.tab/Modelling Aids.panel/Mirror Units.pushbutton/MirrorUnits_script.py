@@ -64,6 +64,8 @@ elif axis_choice == "Y-axis":
 
 try:
     success = True
+    tg = TransactionGroup (doc, "Copy Paste Unit Typologies")
+    tg.Start()
     t = Transaction (doc, ("Mirror Unit Typologies"))
     t.Start()
     skipped_data =[]
@@ -122,7 +124,7 @@ try:
             else:
                 skipped_group_data = [reference_room_name, "UNIT TYPOLOGY FILE NOT FOUND"]
                 skipped_data.append(skipped_group_data)
-
+    groups =[]
     excel_typology_names = []
     target_point_strs = []
     for row in range (1, excel_worksheet.nrows):
@@ -164,7 +166,7 @@ try:
                     level_offset = copied_at_target.LookupParameter("Origin Level Offset")
                     if level_offset:
                         level_offset.Set(0)
-
+                    groups.append()
                     moved_group_data = [target_room_name, target_level.Name]
                     moved_data.append(moved_group_data)
                     #     print("Group moved to new level: {}".format(target_level.Name))
@@ -174,17 +176,30 @@ try:
                 skipped_group_data = [reference_room_name, "UNABLE TO COPY"]
                 skipped_data.append(skipped_group_data)
 
-                print ("Model Group {} (ID:{}) copied to {}".format(copied_group,output.linkify(copied_at_target_id),group_location_after_move))
-                copied_at_target.UngroupMembers()
+                #print ("Model Group {} (ID:{}) copied to {}".format(copied_group,output.linkify(copied_at_target_id),group_location_after_move))
+                
     else:
         skipped_group_data = [target_room_name, "UNIT LOCATION NOT FOUND"]
         skipped_data.append(skipped_group_data)
     doc.Delete(initial_copy_id)
     #print (copy_counter)
     t.Commit()
+
+
+    t = Transaction (doc, "Ungroup and Delete Groups")
+    t.Start()
+    model_groups_in_main_models = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_IOSModelGroups).WhereElementIsNotElementType().ToElements()
+    for group in model_groups_in_main_models:
+        if target_room_name == group.Name:
+            group.UngroupMembers()
+    for initial_copy_id in initial_copy_ids:
+        doc.Delete (initial_copy_id)
+    t.Commit()
+    tg.Assimilate()
+
 except Exception as e:
     success = False  
-    output.print_md("##⚠️ Error occurred: {}".format(e))
+    forms.alert("##⚠️ Error occurred, please contact the author {}".format(__author__))
     t.RollBack()
 
 if success:

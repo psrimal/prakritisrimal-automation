@@ -15,6 +15,7 @@ ui_doc = __revit__.ActiveUIDocument
 doc     = __revit__.ActiveUIDocument.Document # Get the Active Document
 app     = __revit__.Application # Returns the Revit Application Object
 
+
 script_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(script_dir, "..", ".."))
 excel_filename = "Room Location.xlsx"
@@ -42,6 +43,8 @@ if not selected_room_name:
 
 try:
     success = True
+    tg = TransactionGroup (doc, "Copy Paste Unit Typologies")
+    tg.Start()
     t = Transaction (doc, ("Copy Unit Typologies"))
     t.Start()
     skipped_data=[]
@@ -96,7 +99,6 @@ try:
                 skipped_group_data = [selected_room_name, "UNIT TYPOLOGY FILE NOT FOUND"]
                 skipped_data.append(skipped_group_data)
 
-
     moved_data =[]
     excel_typology_names = []
     target_point_strs = []
@@ -118,8 +120,8 @@ try:
             # print ("Copied Group Location Point{}".format(group_location))
                 translation_vector = target_point
                 copied_at_target_ids  = ElementTransformUtils.CopyElement(doc, initial_copy_id, translation_vector)
-                #print ("Copied at target number".format(len(copied_at_target_ids)))
                 for copied_at_target_id in copied_at_target_ids:
+                    #print (copied_at_target_id)
                     copied_at_target = doc.GetElement(copied_at_target_id)
                     group_location_after_move = copied_at_target.Location.Point
                     current_level_param = copied_at_target.LookupParameter("Reference Level")
@@ -143,6 +145,7 @@ try:
                     #     print("Group moved to new level: {}".format(target_level.Name))
                     # else:
                     #     print("No target level found for Z-value: {}".format(target_z_value))
+                    
                     moved_group_data = [selected_room_name, target_level.Name]
                     moved_data.append(moved_group_data)
                 #print ("Model Group {} (ID:{}) copied to {}".format(copied_group,output.linkify(copied_at_target_id),group_location_after_move))
@@ -158,10 +161,22 @@ try:
 
     #print (copy_counter)
     t.Commit()
+
+    t = Transaction (doc, "Ungroup and Delete Groups")
+    t.Start()
+    model_groups_in_main_models = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_IOSModelGroups).WhereElementIsNotElementType().ToElements()
+    for group in model_groups_in_main_models:
+        if selected_room_name == group.Name:
+            group.UngroupMembers()
+    for initial_copy_id in initial_copy_ids:
+        doc.Delete (initial_copy_id)
+    t.Commit()
+    tg.Assimilate()
 except Exception as e:
     success = False  
     output.print_md("##⚠️ Error occurred: {}".format(e))
     t.RollBack()
+
 
 if success:
     if moved_data:
