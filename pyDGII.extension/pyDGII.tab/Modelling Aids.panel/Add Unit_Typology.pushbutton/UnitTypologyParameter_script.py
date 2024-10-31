@@ -18,6 +18,7 @@ app = __revit__.Application # Returns the Revit Application Object
 doc_path = doc.PathName
 file_name = os.path.basename(doc_path)
 file_name_without_extension = os.path.splitext(file_name)[0]
+unit_name = file_name_without_extension.split("_")[0]
 
 # Setting up the Shared Parameter
 door_category = doc.Settings.Categories.get_Item(BuiltInCategory.OST_Doors) # Returns a Category Obejct that contains all categories. In this case a Category of just Doors. doc.Settings accesse all the settings in the Revit Applcaition. Here specifically asking the categories to be listed
@@ -65,11 +66,11 @@ walls = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Walls).Wher
 
 for door in doors:
     door_parameter = door.LookupParameter("Unit_Typology")
-    door_parameter.Set(file_name_without_extension)
+    door_parameter.Set(unit_name)
 
 for wall in walls:
     wall_parameter = wall.LookupParameter("Unit_Typology")
-    wall_parameter.Set(file_name_without_extension)
+    wall_parameter.Set(unit_name)
 t.Commit()
 
 

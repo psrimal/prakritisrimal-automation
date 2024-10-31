@@ -29,6 +29,22 @@ if not unique_room_names:
     script.exit()
 
 sorted_room_names = sorted(unique_room_names)
+csv_file_path = "C:\Users\psrimal\Desktop\Diryah Automation\prakritisrimal-automation\pyDGII.extension\pyDGII.tab\Room Names.csv" 
+try:
+    # Append data to the CSV file
+    with open(csv_file_path, mode='ab') as file:  # 'ab' for append and binary mode in Python 2.7
+        writer = csv.writer(file)
+
+        # If the file is new and empty, add the header row
+        if file.tell() == 0:  # Checks if the file is empty
+            writer.writerow(["Room Name"])
+
+        # Write the new data row
+        for room_name in sorted_room_names:
+            writer.writerow([room_name])
+except:
+    pass
+
 selected_room_names = forms.SelectFromList.show(sorted_room_names, multiselect = True, title = 'Select Rooms to Write Base Point Location')
 
 if not selected_room_names:
@@ -69,7 +85,7 @@ for room in target_rooms:
                     min_point = XYZ(min(min_point.X, point.X), min(min_point.Y, point.Y), min(min_point.Z, point.Z))
                     #max_point = XYZ(max(max_point.X, point.X), max(max_point.Y, point.Y), max(max_point.Z, point.Z))
     min_point_str = "{},{},{}".format(min_point.X, min_point.Y, min_point.Z)
-    write_data = [room_name, ' ', min_point_str]
+    write_data = [room_name, min_point_str]
     csv_file_path = "C:\Users\psrimal\Desktop\Diryah Automation\prakritisrimal-automation\pyDGII.extension\pyDGII.tab\Room Location.csv"
     try:
         # Append data to the CSV file
@@ -78,7 +94,7 @@ for room in target_rooms:
 
             # If the file is new and empty, add the header row
             if file.tell() == 0:  # Checks if the file is empty
-                writer.writerow(["Room Name ", "File Location", "Room Location"])
+                writer.writerow(["Room Name ", "Room Location"])
 
             # Write the new data row
             writer.writerow(write_data)
